@@ -58,11 +58,32 @@ In order to protect against this scenario, branches should always be connected t
 > [!IMPORTANT]
 > You cannot connect a VNet to two Virtual WAN Hubs.
 
-C
-Missing
-Firewall
-Pricing
+### Interconnect SAP HEC environment with Single secured Virtual WAN Hub
+
+In order to filter traffic to and from the SAP HEC VNets, virtual WAN Routing can be configured so that the traffic is routed over Azure Firewall instances deployed in the virtual WAN Hub. For more information about secured virtual WAN Hubs see [What is a secured virtual hub?](https://docs.microsoft.com/en-us/azure/firewall-manager/secured-virtual-hub)
 
 
+> [!NOTE]
+> Azure is working with select networking partners to enable customers to deploy a third-party Network Virtual Appliance (NVA) directly into the virtual hub. For more information see [Network Virtual Appliance in an Azure Virtual WAN hub](https://docs.microsoft.com/en-us/azure/virtual-wan/about-nva-hub)
 
+> [!NOTE]
+> Customers using a Network Virtual Appliance which is not yet supported in an Virtual WAN hub and don´t want to use Azure Firewall, can also deploy a Network Virtual Appliance within a virtual WAN Spoke VNet. For more information see [Route traffic through an NVA](https://docs.microsoft.com/en-us/azure/virtual-wan/scenario-route-through-nva)
+
+![SAPVWNASINGLEHUBFW](/SAPVWANSINGLEHUBFW.jpg)
+
+
+In the example above, traffic to and from the SAP HEC VNets is forwarded over Azure Firewall instances deployed in the virtual WAN Hub. This can be achieved by using virtual WAN Custom Route Tables. 
+
+> [!NOTE]
+> Custom Route Tables can also be used to control the advertisement of the Routes pointing to the SAP HEC VNets. For example, it can be configured that the routes to the SAP HEC VNets are only visible from certain connected VNets. 
+
+The configuration of traffic rules is done within an Azure Firewall Policy and the Firewall logs all traffic. 
+
+
+> [!NOTE]
+> Internet Traffic within the SAP HEC environment is controlled by SAP and can´t be forwarded over a secured virtual Hub. 
+
+### Interconnect SAP HEC environment with multiple secured Virtual WAN Hub
+
+Customers which leverage multiple global distributed secured virtual WAN Hubs can still filter traffic to and from the SAP HEC environment. However, currently only traffic from branches, Mobile Users and VNets connected to the virtual WAN Hub where the SAP HEC VNets are connected can be inspected. Branches, VNets and Mobile users connected to a remote Hub must bypass the Azure Firewall instance in the secured Virtual Hub in order to communicate with the SAP HEC systems.
 
