@@ -32,12 +32,13 @@ The below diagram depicts a standard Azure based SAP HEC customer environment wi
 The primary VNet is provisioned within the Azure Region West Europe. Another VNet is provisioned within the North Europe Azure Region. A global VNet peering is established between those two networks in order to allow replication traffic to flow between the two regions. 
 
 ## Interconnect SAP HEC environment with Azure Virtual WAN
-While it is possible to treat the SAP HEC environment as branches and connect them by setting up Azure VPN Gateways and establish IPSec Tunnels, the recommended method is to leverage an Virtual WAN connection. An Virtual WAN VNet connection establishes a peering between an VNet and an Virtual WAN Hub Network. The Virtual WAN HUB Router instances route traffic to and from the connected VNet to all other VNets and branches. There is no requirement to provision Virtual Network Gateways.
+While it is possible to treat the SAP HEC environment as branches and connect them by setting up Azure VPN Gateways and establish IPSec Tunnels, the recommended method is to leverage an Virtual WAN connection. An Virtual WAN VNet connection establishes a peering between an VNet and an Virtual WAN Hub Network. The Virtual WAN HUB Router instances route traffic to and from the connected VNet to all other VNets. Traffic coming from on-premises/branches will terminate in the respective VPN/ExpressRoute gateways and only go through a router if accessing a remote hub’s VNet.
 An Virtual WAN VNet Connection can be established even if the VNet is not in the same Azure Active Directory (AAD) Tenant hence it can be used to interconnect a SAP HEC environment.
 For more information on how to establish a Virtual WAN VNet connection across tenants see [Connect cross-tenant VNets to a Virtual WAN Hub](https://docs.microsoft.com/en-us/azure/virtual-wan/cross-tenant-vnet).
 
 > [!WARNING]
-> Advertising a default route to the Virtual WAN Connection of the SAP HEC Virtual Networks is not supported and can result in SAP HEC service unavailability.
+> When using secured Virtual Hubs to filter Internet traffic of VNet connections, a default route of 0.0.0.0/0 with a next hop of the Azure Firewall instance in the virtual Hub is advertised to the VNet route table. Advertising such a default route to the Virtual WAN Connection of the SAP HEC Virtual Networks is not supported and can result in SAP HEC service unavailability.
+You can disable the propagation of a default route advertised by a secured virtual Hub for single cross-tenant VNet connections via the vWAN Powershell cmdlets and the parameter "enableinternetsecurityflag". Fore more information see [vWAN Powershell cmdlets - New-AzVirtualHubVnetConnection](https://docs.microsoft.com/en-us/powershell/module/az.network/new-azvirtualhubvnetconnection?view=azps-5.4.0) and to change existing cross-Tenant peerings see [vWAN Powershell cmdlets - Update-AzVirtualHubVnetConnection](https://docs.microsoft.com/en-us/powershell/module/az.network/update-azvirtualhubvnetconnection?view=azps-5.4.0)
 
 ### Interconnect SAP HEC environment with Single Virtual WAN Hub
 The below diagram shows a scenario where a DR enabled SAP HEC environment is connected to a single Virtual WAN Hub via Virtual WAN VNet connections. 
@@ -47,7 +48,8 @@ The below diagram shows a scenario where a DR enabled SAP HEC environment is con
 While still being owned & managed by SAP, the provided services are available within the customer environment like customer owned ones. Depending on the customer requirements and the routing configuration, the SAP HEC services can made reachable from  all connected branches, mobile users and customer VNets or only from specific ones.  For more  information about Virtual WAN Routing see [About virtual hub routing](https://docs.microsoft.com/en-us/azure/virtual-wan/about-virtual-hub-routing#:~:text=%20Please%20consider%20the%20following%20when%20configuring%20Virtual,via%20Azure%20Firewall%20is%20currently%20not...%20More).
 
 ### Interconnect SAP HEC environment with multiple Virtual WAN Hubs
-In order to protect against rare the scenario where the primary SAP HEC VNet and the Virtual WAN Hub to which it is connected becomes unavailable, multiple Virtual WAN Hubs and connections are required. 
+In Theory, a single Virtual WAN Hub can become a single point of failure. In the rare event that an entire Virtual WAN Hub becomes unavailable, connections to the connected VNEts are also no longer possible.
+In order to protect against this scenario redundant multiple Virtual WAN Hubs and connections are required. 
 
 ![SAPVWNANMULTI](/SAPVWANMULTIHUB.jpg)
 
@@ -62,6 +64,8 @@ In order to protect against this scenario, branches should always be connected t
 
 In order to filter traffic to and from the SAP HEC VNets, virtual WAN Routing can be configured so that the traffic is routed over Azure Firewall instances deployed in the virtual WAN Hub. For more information about secured virtual WAN Hubs see [What is a secured virtual hub?](https://docs.microsoft.com/en-us/azure/firewall-manager/secured-virtual-hub)
 
+> [!NOTE]
+> Traffic from the customers environment to and from the HANA Enterprise Cloud environment is not restricted by SAP. The customer is responsible to filter this traffic. 
 
 > [!NOTE]
 > Azure is working with select networking partners to enable customers to deploy a third-party Network Virtual Appliance (NVA) directly into the virtual hub. For more information see [Network Virtual Appliance in an Azure Virtual WAN hub](https://docs.microsoft.com/en-us/azure/virtual-wan/about-nva-hub)
